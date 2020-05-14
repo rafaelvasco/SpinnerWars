@@ -1,0 +1,16 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://Game.gd" type="Script" id=2]
+
+[node name="GameScene" type="Node2D"]
+script = ExtResource( 2 )
+
+[node name="SpawnPoints" type="Node2D" parent="."]
+
+[node name="0" type="Position2D" parent="SpawnPoints"]
+position = Vector2( 835, 260 )
+
+[node name="1" type="Position2D" parent="SpawnPoints"]
+position = Vector2( 125, 260 )
+
+[node name="Players" type="Node2D" parent="."]
