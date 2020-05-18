@@ -154,6 +154,9 @@ func host_game(new_player_name):
 	var result = self.host.create_server(DEFAULT_CONN_PORT, MAX_PLAYERS)
 	if result == OK:
 		get_tree().set_network_peer(host)
+	else:
+		print("Failed to create server")
+		return
 	
 	print('HOST GAME RESULT: ' + str(result))
 	return result
