@@ -6,116 +6,11 @@
 anchor_left = 0.00104167
 anchor_right = 1.00104
 anchor_bottom = 1.0
-margin_left = -0.2262
+margin_left = -1.2262
 margin_top = -2.0
-margin_right = -0.226196
+margin_right = -1.2262
 margin_bottom = -2.0
 script = ExtResource( 1 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="Connect" type="Panel" parent="."]
-visible = false
-margin_left = 288.0
-margin_top = 41.0
-margin_right = 668.0
-margin_bottom = 209.0
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="Label_Name" type="Label" parent="Connect"]
-margin_left = 37.05
-margin_top = 36.1
-margin_right = 79.05
-margin_bottom = 50.1
-text = "Name:"
-
-[node name="Input_Name" type="LineEdit" parent="Connect"]
-margin_left = 89.0
-margin_top = 31.0
-margin_right = 269.0
-margin_bottom = 55.0
-max_length = 256
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="Label_IP" type="Label" parent="Connect"]
-margin_left = 38.1001
-margin_top = 77.9001
-margin_right = 78.1001
-margin_bottom = 91.9001
-text = "IP:"
-
-[node name="Input_IP" type="LineEdit" parent="Connect"]
-margin_left = 91.0
-margin_top = 74.0
-margin_right = 270.0
-margin_bottom = 98.0
-text = "127.0.0.1"
-max_length = 15
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="Button_Host" type="Button" parent="Connect"]
-margin_left = 273.499
-margin_top = 33.0
-margin_right = 342.499
-margin_bottom = 53.0
-text = "Host"
-
-[node name="Button_Join" type="Button" parent="Connect"]
-margin_left = 272.0
-margin_top = 77.0
-margin_right = 342.0
-margin_bottom = 97.0
-text = "Join"
-
-[node name="Label_Error" type="Label" parent="Connect"]
-margin_left = 37.0
-margin_top = 128.0
-margin_right = 347.0
-margin_bottom = 142.0
-
-[node name="Label_Version" type="Label" parent="Connect"]
-margin_left = 10.0
-margin_top = 144.0
-margin_right = 98.0
-margin_bottom = 158.0
-text = "Version: 0.1.3"
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="Players" type="Panel" parent="."]
-visible = false
-margin_left = 344.0
-margin_top = 67.0
-margin_right = 608.0
-margin_bottom = 406.0
-
-[node name="Label_Waiting" type="Label" parent="Players"]
-margin_left = 24.0
-margin_top = 30.0
-margin_right = 161.0
-margin_bottom = 44.0
-text = "Awaiting for Players..."
-
-[node name="List_Players" type="ItemList" parent="Players"]
-margin_left = 24.0
-margin_top = 50.0
-margin_right = 241.0
-margin_bottom = 281.0
-
-[node name="Button_Start" type="Button" parent="Players"]
-margin_left = 25.0
-margin_top = 295.0
-margin_right = 241.0
-margin_bottom = 315.0
-text = "Start"
 __meta__ = {
 "_edit_use_anchors_": false
 }
@@ -126,6 +21,7 @@ margin_top = 56.0
 margin_right = 726.0
 margin_bottom = 485.0
 __meta__ = {
+"_edit_lock_": true,
 "_edit_use_anchors_": false
 }
 
@@ -135,6 +31,7 @@ margin_top = 89.0
 margin_right = 455.0
 margin_bottom = 372.0
 __meta__ = {
+"_edit_lock_": true,
 "_edit_use_anchors_": false
 }
 
@@ -144,16 +41,20 @@ margin_top = 56.0
 margin_right = 131.0
 margin_bottom = 70.0
 text = "Open Matches:"
+__meta__ = {
+"_edit_lock_": true
+}
 
 [node name="ListMatchesRequest" type="HTTPRequest" parent="MatchList"]
 
 [node name="Button_NewMatch" type="Button" parent="MatchList"]
 margin_left = 37.0
-margin_top = 384.0
-margin_right = 152.0
-margin_bottom = 418.0
-text = "Host new Match"
+margin_top = 383.0
+margin_right = 154.0
+margin_bottom = 417.0
+text = "Host New Match"
 __meta__ = {
+"_edit_lock_": true,
 "_edit_use_anchors_": false
 }
 
@@ -164,6 +65,7 @@ margin_right = 280.0
 margin_bottom = 418.0
 text = "Join Match"
 __meta__ = {
+"_edit_lock_": true,
 "_edit_use_anchors_": false
 }
 
@@ -174,19 +76,26 @@ margin_right = 453.0
 margin_bottom = 413.0
 text = "Request"
 __meta__ = {
+"_edit_lock_": true,
 "_edit_use_anchors_": false
 }
 
-[node name="Label_Error" type="Label" parent="MatchList"]
+[node name="Label_Msg" type="Label" parent="MatchList"]
 margin_left = 146.0
 margin_top = 56.0
-margin_right = 186.0
+margin_right = 453.0
 margin_bottom = 70.0
-custom_colors/font_color = Color( 1, 0, 0, 1 )
-text = "Error"
+custom_colors/font_color = Color( 1, 1, 1, 1 )
+text = "Msg"
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[node name="AddHostRequest" type="HTTPRequest" parent="MatchList"]
+
+[node name="JoinRequest" type="HTTPRequest" parent="MatchList"]
+
+[node name="CreateMatchRequest" type="HTTPRequest" parent="MatchList"]
 
 [node name="ErrorDialog" type="AcceptDialog" parent="."]
 margin_right = 83.0
@@ -195,5 +104,22 @@ margin_bottom = 58.0
 [node name="MsgTimer" type="Timer" parent="."]
 wait_time = 3.0
 one_shot = true
+
+[node name="WaitingChallenger" type="Panel" parent="."]
+visible = false
+margin_left = 235.0
+margin_top = 56.0
+margin_right = 726.0
+margin_bottom = 248.0
+
+[node name="Label_Waiting" type="Label" parent="WaitingChallenger"]
+margin_left = 182.0
+margin_top = 86.0
+margin_right = 313.0
+margin_bottom = 100.0
+text = "Waiting Challenger..."
+[connection signal="item_selected" from="MatchList/List_Matches" to="." method="_on_match_list_selected"]
+[connection signal="pressed" from="MatchList/Button_NewMatch" to="." method="_on_button_new_host_pressed"]
+[connection signal="pressed" from="MatchList/Button_JoinMatch" to="." method="_on_button_join_pressed"]
 [connection signal="pressed" from="MatchList/Button" to="." method="_on_request_pressed"]
 [connection signal="timeout" from="MsgTimer" to="." method="_on_msg_timeout"]

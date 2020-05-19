@@ -14,3 +14,16 @@ position = Vector2( 835, 260 )
 position = Vector2( 125, 260 )
 
 [node name="Players" type="Node2D" parent="."]
+
+[node name="UI" type="Node2D" parent="."]
+
+[node name="Button_EndGame" type="Button" parent="UI"]
+margin_left = 801.75
+margin_top = 18.0
+margin_right = 945.75
+margin_bottom = 61.0
+text = "End Game"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+[connection signal="pressed" from="UI/Button_EndGame" to="." method="_on_end_game_pressed"]

@@ -31,8 +31,6 @@ var sword_props = {
 	},
 	"ice": {
 		
-	
-		
 		0: {
 			"texture": preload("res://Assets/sword_lvl1_ice.png"),
 			"weight": 1,
@@ -55,8 +53,6 @@ var sword_props = {
 		}
 	},
 	"light": {
-		
-	
 		
 		0: {
 			"texture": preload("res://Assets/sword_lvl1_light.png"),
@@ -81,8 +77,6 @@ var sword_props = {
 	},
 	"magic": {
 		
-	
-		
 		0: {
 			"texture": preload("res://Assets/sword_lvl1_magic.png"),
 			"weight": 1,
@@ -105,8 +99,6 @@ var sword_props = {
 		}
 	},
 	"poison": {
-		
-		
 		
 		0: {
 			"texture": preload("res://Assets/sword_lvl1_poison.png"),
@@ -136,6 +128,5 @@ func _ready():
 	pass
 
 
-
-#func _process(delta):
-#	pass
+func _on_end_game_pressed():
+	GameManager.end_game()

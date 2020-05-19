@@ -1,216 +1,177 @@
 extends Node
 
-const DEFAULT_CONN_PORT = 10567
-const MAX_PLAYERS = 12
-
-var player_name = ""
-
-# Names for remote players in id:name format.
-master var players = {}
-master var players_ready = []
+var player = null
+master var connected_player = null
+master var current_match = null
 
 # Signals to let lobby GUI know what's going on.
-signal player_list_changed()
 signal connection_failed()
 signal connection_succeeded()
 signal game_ended()
 signal game_error(error)
 
-master var host = null
-var client = null
+onready var game_scene = preload("res://Game.tscn")
+onready var player_scene = preload("res://Entities/Player.tscn")
+
+const API_URL_REMOVE_MATCH = "http://localhost:59485/api/match/remove/"
+
+var remove_match_http_request = null
 
 puppet var game_ongoing = false
+var server_established = false
+var quit_game_requested = false
+var game_scene_instance = null
 
 func _ready():
-	print('GAME MANAGER READY')
-# warning-ignore:return_value_discarded
 	get_tree().connect("network_peer_connected", self, "_player_connected")
-# warning-ignore:return_value_discarded
 	get_tree().connect("network_peer_disconnected", self, "_player_disconnected")
-# warning-ignore:return_value_discarded
 	get_tree().connect("connected_to_server", self, "_connected_ok")
-# warning-ignore:return_value_discarded
 	get_tree().connect("connection_failed", self, "_connected_fail")
-# warning-ignore:return_value_discarded
 	get_tree().connect("server_disconnected", self, "_server_disconnected")
+	get_tree().set_auto_accept_quit(false)
+	
+	self.remove_match_http_request = HTTPRequest.new()
+	self.add_child(self.remove_match_http_request)
+	self.remove_match_http_request.connect("request_completed", self, "_on_request_match_remove_completed")
 	
 	
 # Callback from SceneTree
 func _player_connected(id):
-	print('PLAYER CONNECTED: ' + str(id))
-	# Registration of a client begins here, tell the connected player that we are here.
-	rpc_id(id, "register_player", player_name)
+	rpc_id(id, "register_player", player.name)
 
 
 # Callback from SceneTree
 func _player_disconnected(id):
-	print('PLAYER DISCONNECTED: ' + str(id))
-	
 	if get_tree().is_network_server():
-		var player_name = players[id]
-		unregister_player(id)
+		var player_name = 	connected_player.name
+		connected_player = null
 		if game_ongoing:
-			emit_signal("game_error", "Player " + player_name + " disconnected.")			
-			end_game()
+			#Show player disconnected msg
+			pass
 	
 				
 # Client only callback			
 func _connected_ok():
-	print('CONNECTION OK')
-	# We just connected to a server 
 	emit_signal("connection_succeeded")
 
 
 # Client only callback 
 func _connected_fail():
-	print('CONNECTION FAIL')
 	get_tree().set_network_peer(null)
 	emit_signal("connection_failed")
 
 
 # Client only callback	
 func _server_disconnected():
-	print('SERVER DISCONNECTED')
 	emit_signal("game_error", "Server disconnected.")
 	
-#### Lobby Management Functions ####
 
-remote func register_player(new_player_name):
+remote func register_player(player_name):
 	var id = get_tree().get_rpc_sender_id()
-	print('REGISTER PLAYER: ' + new_player_name + ', ' + str(id))
-	players[id] = new_player_name
-	emit_signal("player_list_changed")
-	
+	self.connected_player = {
+		"id": id,
+		"name": player_name
+	}
 
-func unregister_player(id):
-	print('UNREGISTER PLAYER: ' + str(id))
-	print(players)
-	players.erase(id)
-	emit_signal("player_list_changed")
 	
+func create_game(player, _match):
+	
+	self.player = player
+	self.current_match = _match
+	self.player.player_id = 1
+	var server = NetworkedMultiplayerENet.new()
+	var result = server.create_server(int(player.port), 2)
+	if result == OK:
+		print('Creating Game:')
+		print(player)
+		get_tree().set_network_peer(server)
+		create_game_scene()
+		spawn_players(self.player, null)
+		start_game()
+		self.server_established = true
+	else:
+		return false
+	
+	return result
 
-remote func pre_start_game(spawn_points):
-	print('PRE START GAME')
-	var game_scene = load("res://Game.tscn").instance()
-	get_tree().get_root().add_child(game_scene)
+remote func create_game_scene():
+	self.game_scene_instance = game_scene.instance()
+	get_tree().get_root().add_child(self.game_scene_instance)
 	get_tree().get_root().get_node("Lobby").hide()
 	
-	var player_scene = load("res://Entities/Player.tscn")
-	
-	for p_id in spawn_points:
-		var spawn_pos = game_scene.get_node("SpawnPoints/" + str(spawn_points[p_id])).position
-		var player = player_scene.instance()
-		
-		player.set_name(str(p_id))
-		player.set_player_id(p_id)
-		player.set_network_master(p_id)
-		player.position = spawn_pos
-		
-		if p_id == get_tree().get_network_unique_id():
-			# If node for this peer id, set name.
-			player.set_player_name(player_name)
-		else:
-			# Otherwise set name from peer.
-			player.set_player_name(players[p_id])
-			
-		game_scene.get_node("Players").add_child(player)
-		
-		
-	if not get_tree().is_network_server():
-		# Tell server we are ready to start.
-		rpc_id(1, "ready_to_start", get_tree().get_network_unique_id())
-	elif players.size() == 0:
-		post_start_game()
-		
-			
-remote func post_start_game():
-	print('POST START GAME')
-	get_tree().set_pause(false)
-	game_ongoing = true
-	if (get_tree().is_network_server()):
-		rset("game_ongoing", true)
-		
-
-remote func ready_to_start(id):
-	print('READY TO START')
-	assert(get_tree().is_network_server())
-	
-	if not id in players_ready:
-		players_ready.append(id)
-		
-	print(players_ready)
-	print(players)
-	if players_ready.size() == players.size():
-		
-		for p in players:
-			rpc_id(p, "post_start_game")
-		post_start_game()
-		
-	
-func host_game(new_player_name):
-	print('HOST GAME: ' + new_player_name)
-	player_name = new_player_name
-	self.host = NetworkedMultiplayerENet.new()
-	var result = self.host.create_server(DEFAULT_CONN_PORT, MAX_PLAYERS)
-	if result == OK:
-		get_tree().set_network_peer(host)
-	else:
-		print("Failed to create server")
-		return
-	
-	print('HOST GAME RESULT: ' + str(result))
-	return result
 	
 
+remote func spawn_players(server, client):
+	spawn_player(0, server)
+	if(client != null):
+		spawn_player(0, client)
 
-func join_game(ip, new_player_name):
-	print('JOIN GAME: ' + new_player_name)
-	player_name = new_player_name
-	self.client = NetworkedMultiplayerENet.new()
-	var result = self.client.create_client(ip, DEFAULT_CONN_PORT)
+
+func spawn_player(spawn_point, player_data):
+	var spawn_pos = self.game_scene_instance.get_node("SpawnPoints/" + str(spawn_point)).position
+	var player = player_scene.instance()
+	player.set_name(player_data.name)
+	player.set_player_name(player_data.name)
+	player.set_player_id(player_data.player_id)
+	player.set_network_master(player_data.player_id)
+	player.position = spawn_pos
+	self.game_scene_instance.get_node("Players").add_child(player)
+	
+
+func join_game(player, _match):
+	self.player = player
+	var client = NetworkedMultiplayerENet.new()
+	var server_ip = _match.server.ip
+	var server_port = _match.server.port
+	var result = client.create_client(server_ip, server_port)
 	if result == OK:
 		get_tree().set_network_peer(client)
-		
-	return result
+		create_game_scene()
+		spawn_players(self.connected_player, self.player)
+		start_game()
+		return result
+	return false
 	
 
-func get_player_list():
-	return players.values()
-	
-
-func get_player_name():
-	return player_name
-
-
-func begin_game():
-	print('BEGIN GAME')
-	assert(get_tree().is_network_server())
-	
-	# Create a dictionary with peer id and respective spawn points
-	var spawn_points = {}
-	spawn_points[1] = 0 # Server in spawn point zero
-	var spawn_point_idx = 1
-	for p in players:
-		spawn_points[p] = spawn_point_idx
-		spawn_point_idx += 1
-	# Call to pre-start game with the spawn points.
-	for p in players:
-		rpc_id(p, "pre_start_game", spawn_points)
-		
-	pre_start_game(spawn_points)
+func start_game():
+	get_tree().set_pause(false)
+	self.game_ongoing = true
 
 
 func end_game():
-	print('END GAME')
-	# Game is in progress.
 	if has_node("/root/GameScene"):
 		get_node("/root/GameScene").queue_free()
 	
-	emit_signal("game_ended")	
-	players.clear()
-	players_ready.clear()
+		
+	connected_player = null
 	game_ongoing = false
-	if get_tree().is_network_server():
-		#self.host.close_connection()
-		rset("game_ongoing", false)
+	if self.current_match != null and get_tree().is_network_server():
+		self._request_match_remove()
+	elif self.quit_game_requested:
+		get_tree().quit()
+	else: 
+		emit_signal("game_ended")
+		
+func _request_match_remove():
+	
+	var error = self.remove_match_http_request.request(API_URL_REMOVE_MATCH + current_match.db_id, PoolStringArray([]), false, HTTPClient.METHOD_DELETE)
+	if error != OK:
+		push_error("And error occurred while requesting match deletion")
+
+func _on_request_match_remove_completed(result, response_code, headers, body):
+	if result == HTTPRequest.RESULT_SUCCESS:
+		self.current_match = null
+		if self.quit_game_requested:
+			get_tree().quit()
+		else:
+			emit_signal("game_ended")
+	else:
+		var response = JSON.parse(body.get_string_from_utf8())
+		push_error("Error while removing match: " + response)
+	
+	
+func _notification(what):
+	if what == MainLoop.NOTIFICATION_WM_QUIT_REQUEST:
+		self.quit_game_requested = true
+		end_game()
 		
