@@ -21,7 +21,6 @@ margin_top = 56.0
 margin_right = 726.0
 margin_bottom = 485.0
 __meta__ = {
-"_edit_lock_": true,
 "_edit_use_anchors_": false
 }
 
@@ -69,17 +68,6 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="Button" type="Button" parent="MatchList"]
-margin_left = 389.0
-margin_top = 393.0
-margin_right = 453.0
-margin_bottom = 413.0
-text = "Request"
-__meta__ = {
-"_edit_lock_": true,
-"_edit_use_anchors_": false
-}
-
 [node name="Label_Msg" type="Label" parent="MatchList"]
 margin_left = 146.0
 margin_top = 56.0
@@ -97,13 +85,11 @@ __meta__ = {
 
 [node name="CreateMatchRequest" type="HTTPRequest" parent="MatchList"]
 
+[node name="AddClientRequest" type="HTTPRequest" parent="MatchList"]
+
 [node name="ErrorDialog" type="AcceptDialog" parent="."]
 margin_right = 83.0
 margin_bottom = 58.0
-
-[node name="MsgTimer" type="Timer" parent="."]
-wait_time = 3.0
-one_shot = true
 
 [node name="WaitingChallenger" type="Panel" parent="."]
 visible = false
@@ -118,8 +104,16 @@ margin_top = 86.0
 margin_right = 313.0
 margin_bottom = 100.0
 text = "Waiting Challenger..."
+
+[node name="MsgTimer" type="Timer" parent="."]
+wait_time = 3.0
+one_shot = true
+
+[node name="RefreshMatchesTimer" type="Timer" parent="."]
+wait_time = 1.5
+autostart = true
 [connection signal="item_selected" from="MatchList/List_Matches" to="." method="_on_match_list_selected"]
 [connection signal="pressed" from="MatchList/Button_NewMatch" to="." method="_on_button_new_host_pressed"]
 [connection signal="pressed" from="MatchList/Button_JoinMatch" to="." method="_on_button_join_pressed"]
-[connection signal="pressed" from="MatchList/Button" to="." method="_on_request_pressed"]
 [connection signal="timeout" from="MsgTimer" to="." method="_on_msg_timeout"]
+[connection signal="timeout" from="RefreshMatchesTimer" to="." method="_on_refresh_matches_timeout"]

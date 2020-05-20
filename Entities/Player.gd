@@ -61,6 +61,9 @@ func _input(event):
 			
 func _physics_process(delta):
 	
+	if not GameManager.game_ongoing:
+		return
+	
 	var motion = Vector2()
 	var pos = Vector2()
 	var ang_vel = 0
@@ -139,6 +142,7 @@ sync func process_damage(source_player_id, target_player_id, damage):
 	print('Player ' + str(target_player_id) + ' life is now: ' + str(self.life))
 	
 	if target_player_id != get_tree().get_network_unique_id():
+		pass
 		rpc_id(target_player_id, "synch_state", self.state, self.life, self.stamina)
 		
 		
